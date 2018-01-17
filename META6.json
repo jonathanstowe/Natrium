@@ -1,0 +1,32 @@
+{
+  "name": "Natrium",
+  "source-url": "https://github.com/jonathanstowe/Natrium.git",
+  "support": {
+    "source": "https://github.com/jonathanstowe/Natrium.git",
+    "email": "jns+gh@gellyfish.co.uk",
+    "bugtracker": "https://github.com/jonathanstowe/Natrium/issues"
+  },
+  "perl": "6.c",
+  "resources": [
+  ],
+  "build-depends": [
+  ],
+  "auth": "github:jonathanstowe",
+  "depends": [
+  ],
+  "tags": [ 
+      "crypto", "libsodium"
+  ],
+  "license": "Artistic-2.0",
+  "test-depends": [
+  ],
+  "provides": {
+      "Natrium": "lib/Natrium.pm"
+  },
+  "version": "0.0.1",
+  "meta-version": "0",
+  "authors": [
+      "Jonathan Stpwe <jns+gh@gellyfish.co.uk"
+  ],
+  "description": "Binding for libsodium"
+}
