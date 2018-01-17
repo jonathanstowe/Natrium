@@ -13,6 +13,7 @@
   ],
   "auth": "github:jonathanstowe",
   "depends": [
+      "NativeHelpers::Array"
   ],
   "tags": [ 
       "crypto", "libsodium"

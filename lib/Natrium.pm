@@ -1,14 +1,51 @@
 use v6.c;
+
 use NativeCall;
 
-## Enumerations
-## Structures
+use NativeHelpers::Array;
 
 
 class Natrium {
-    # == /usr/include/sodium/crypto_auth_hmacsha512.h ==
 
     constant LIB = [ 'sodium', v18 ];
+
+    sub sodium_init() is native(LIB) returns int32 { * }
+
+    class X::Init is Exception {
+        has Str $.message = "failed to initialise crypto system";
+    }
+
+    submethod BUILD() {
+        if sodium_init() < 0 {
+            X::Init.new.throw;
+        }
+    }
+
+    sub crypto_generichash_bytes() is native(LIB) returns size_t { * }
+
+    has Int $.generichash-bytes;
+
+    method generichash-bytes( --> Int ) {
+        $!generichash-bytes //= crypto_generichash_bytes();
+    }
+
+    #-From /usr/include/sodium/crypto_generichash.h:49
+    #SODIUM_EXPORT
+    #int crypto_generichash(unsigned char *out, size_t outlen,
+    sub crypto_generichash(CArray[uint8] $out, size_t $outlen, CArray[uint8] $in, ulonglong $inlen, CArray[uint8] $key, size_t $keylen --> int32 ) is native(LIB) { * }
+
+    proto method generichash(|c) { * }
+
+    multi method generichash(Blob $in --> Buf) {
+        my CArray $out = CArray[uint8].new((0 xx self.generichash-bytes));
+        my CArray $in-array = copy-buf-to-carray(Buf.new($in.list));
+        crypto_generichash($out, self.generichash-bytes, $in-array, $in.elems, CArray[uint8], 0);
+        copy-carray-to-buf($out, self.generichash-bytes)
+    }
+
+    multi method generichash(Str $in --> Buf ) {
+        self.generichash($in.encode);
+    }
 
     class crypto_hash_sha256_state is repr('CStruct') {
         has CArray[uint32]              $.state; # Typedef<uint32>->|unsigned int|[8] state
@@ -590,13 +627,6 @@ class Natrium {
                                       ) is native(LIB) returns int32 { * }
 
 
-    # == /usr/include/sodium/core.h ==
-
-    #-From /usr/include/sodium/core.h:12
-    #SODIUM_EXPORT
-    #int sodium_init(void)
-    sub sodium_init(
-                    ) is native(LIB) returns int32 { * }
 
 
     # == /usr/include/sodium/crypto_verify_32.h ==
@@ -2182,12 +2212,7 @@ class Natrium {
     sub crypto_generichash_bytes_max(
                                      ) is native(LIB) returns size_t { * }
 
-    #-From /usr/include/sodium/crypto_generichash.h:26
-    ##define crypto_generichash_BYTES crypto_generichash_blake2b_BYTES
-    #SODIUM_EXPORT
-    #size_t  crypto_generichash_bytes(void);
-    sub crypto_generichash_bytes(
-                                 ) is native(LIB) returns size_t { * }
+
 
     #-From /usr/include/sodium/crypto_generichash.h:30
     ##define crypto_generichash_KEYBYTES_MIN crypto_generichash_blake2b_KEYBYTES_MIN
@@ -2223,16 +2248,6 @@ class Natrium {
     sub crypto_generichash_statebytes(
                                       ) is native(LIB) returns size_t { * }
 
-    #-From /usr/include/sodium/crypto_generichash.h:49
-    #SODIUM_EXPORT
-    #int crypto_generichash(unsigned char *out, size_t outlen,
-    sub crypto_generichash(Pointer[uint8]                $out # unsigned char*
-                          ,size_t                        $outlen # Typedef<size_t>->|long unsigned int|
-                          ,Pointer[uint8]                $in # const unsigned char*
-                          ,ulonglong                     $inlen # long long unsigned int
-                          ,Pointer[uint8]                $key # const unsigned char*
-                          ,size_t                        $keylen # Typedef<size_t>->|long unsigned int|
-                           ) is native(LIB) returns int32 { * }
 
     #-From /usr/include/sodium/crypto_generichash.h:54
     #SODIUM_EXPORT
