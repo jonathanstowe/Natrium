@@ -744,11 +744,7 @@ class Natrium {
     #-From /usr/include/sodium/utils.h:55
     #SODIUM_EXPORT
     #char *sodium_bin2hex(char * const hex, const size_t hex_maxlen,
-    sub sodium_bin2hex(Str                           $hex # const char*
-                      ,size_t                        $hex_maxlen # const Typedef<size_t>->|long unsigned int|
-                      ,Pointer[uint8]                $bin # const const unsigned char*
-                      ,size_t                        $bin_len # const Typedef<size_t>->|long unsigned int|
-                       ) is native(LIB) returns Str { * }
+    sub sodium_bin2hex(Str $hex, size_t $hex_maxlen, CArray[uint8] $bin, size_t $bin_len --> Str ) is native(LIB) { * }
 
     #-From /usr/include/sodium/utils.h:59
     #SODIUM_EXPORT
@@ -2022,9 +2018,7 @@ class Natrium {
     #-From /usr/include/sodium/randombytes.h:29
     #SODIUM_EXPORT
     #void randombytes_buf(void * const buf, const size_t size);
-    sub randombytes_buf(Pointer                       $buf # const void*
-                       ,size_t                        $size # const Typedef<size_t>->|long unsigned int|
-                        ) is native(LIB)  { * }
+    sub randombytes_buf(CArray $buf, size_t $size) is native(LIB)  { * }
 
     #-From /usr/include/sodium/randombytes.h:32
     #SODIUM_EXPORT
@@ -2065,7 +2059,7 @@ class Natrium {
     #-From /usr/include/sodium/randombytes.h:52
     #SODIUM_EXPORT
     #void randombytes(unsigned char * const buf, const unsigned long long buf_len);
-    sub randombytes(Pointer[uint8]                $buf # const unsigned char*
+    sub randombytes(CArray[uint8]                $buf # const unsigned char*
                    ,ulonglong                     $buf_len # const long long unsigned int
                     ) is native(LIB)  { * }
 
