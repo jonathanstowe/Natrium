@@ -18,9 +18,10 @@ ok $val ≤ 512, "and it is within the bound";
 
 my Buf $buf;
 
-lives-ok { $buf = $t.randombytes(buf => 16) }, "randombytes with buf";
+#
+lives-ok { $buf = $t.randombytes(buf => $t.keybytes) }, "randombytes with buf";
 
-is $buf.bytes, 16, "got the right number of bytes";
+is $buf.bytes, $t.keybytes, "got the right number of bytes";
 
 done-testing;
 # vim: ft=perl6
