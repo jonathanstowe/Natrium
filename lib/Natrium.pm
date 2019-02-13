@@ -9,22 +9,25 @@ use LibraryCheck;
 
 class Natrium {
 
+    my Str $lib;
     sub find-lib-version() {
-        my Str $name = 'sodium';
-        my Int $lower = 18;
-        my Int $upper = 23;
+        $lib //= do {
+            my Str $name = 'sodium';
+            my Int $lower = 18;
+            my Int $upper = 23;
 
-        my $lib;
+            my $lib;
 
-        for $lower .. $upper -> $version-number {
-            my $version = Version.new($version-number);
+            for $lower .. $upper -> $version-number {
+                my $version = Version.new($version-number);
 
-            if library-exists($name, $version) {
-                $lib =  guess_library_name($name, $version) ;
-                last;
+                if library-exists($name, $version) {
+                    $lib =  guess_library_name($name, $version) ;
+                    last;
+                }
             }
+            $lib;
         }
-        $lib;
     }
 
     constant LIB =  &find-lib-version;
@@ -66,6 +69,50 @@ class Natrium {
     multi method generichash(Str $in --> Buf ) {
         self.generichash($in.encode);
     }
+
+
+
+    sub randombytes_random( --> uint32 ) is native(LIB) { * }
+
+    proto method randombytes(|c) { * }
+
+    multi method randombytes( --> Int ) {
+        randombytes_random();
+    }
+
+    sub randombytes_uniform(uint32 $upper_bound --> uint32) is native(LIB) { * }
+
+    multi method randombytes(Int :$upper-bound! --> Int ) {
+        randombytes_uniform($upper-bound);
+    }
+
+    sub randombytes_buf(CArray[uint8] $buf, size_t $size) is native(LIB)  { * }
+
+    multi method randombytes(Int :$buf! --> Buf ) {
+        my CArray $data = CArray[uint8].new((0 xx $buf));
+        randombytes_buf($data, $buf);
+        copy-carray-to-buf($data, $buf);
+    }
+
+
+    #-From /usr/include/sodium/randombytes.h:38
+    #SODIUM_EXPORT
+    #void randombytes_stir(void);
+    sub randombytes_stir(
+                         ) is native(LIB)  { * }
+
+    #-From /usr/include/sodium/randombytes.h:41
+    #SODIUM_EXPORT
+    #int randombytes_close(void);
+    sub randombytes_close(
+                          ) is native(LIB) returns int32 { * }
+
+    #-From /usr/include/sodium/randombytes.h:52
+    #SODIUM_EXPORT
+    #void randombytes(unsigned char * const buf, const unsigned long long buf_len);
+    sub randombytes(CArray[uint8]                $buf # const unsigned char*
+                   ,ulonglong                     $buf_len # const long long unsigned int
+                    ) is native(LIB)  { * }
 
     class crypto_hash_sha256_state is repr('CStruct') {
         has CArray[uint32]              $.state; # Typedef<uint32>->|unsigned int|[8] state
@@ -110,14 +157,6 @@ class Natrium {
 
     # == /usr/include/sodium/randombytes.h ==
 
-    class randombytes_implementation is repr('CStruct') {
-        has Pointer                       $.implementation_name; # F:const char* ( )* implementation_name
-        has Pointer                       $.random; # F:Typedef<uint32>->|unsigned int| ( )* random
-        has Pointer                       $.stir; # F:void ( )* stir
-        has Pointer                       $.uniform; # F:Typedef<uint32>->|unsigned int| ( )* uniform
-        has Pointer                       $.buf; # F:void ( )* buf
-        has Pointer                       $.close; # F:int ( )* close
-    }
 
     # == /usr/include/sodium/crypto_auth_hmacsha256.h ==
 
@@ -2033,56 +2072,6 @@ class Natrium {
                          ) is native(LIB) returns int32 { * }
 
 
-    # == /usr/include/sodium/randombytes.h ==
-
-    #-From /usr/include/sodium/randombytes.h:29
-    #SODIUM_EXPORT
-    #void randombytes_buf(void * const buf, const size_t size);
-    sub randombytes_buf(CArray $buf, size_t $size) is native(LIB)  { * }
-
-    #-From /usr/include/sodium/randombytes.h:32
-    #SODIUM_EXPORT
-    #uint32 randombytes_random(void);
-    sub randombytes_random(
-                           ) is native(LIB) returns uint32 { * }
-
-    #-From /usr/include/sodium/randombytes.h:35
-    #SODIUM_EXPORT
-    #uint32 randombytes_uniform(const uint32 upper_bound);
-    sub randombytes_uniform(uint32 $upper_bound # const Typedef<uint32>->|unsigned int|
-                            ) is native(LIB) returns uint32 { * }
-
-    #-From /usr/include/sodium/randombytes.h:38
-    #SODIUM_EXPORT
-    #void randombytes_stir(void);
-    sub randombytes_stir(
-                         ) is native(LIB)  { * }
-
-    #-From /usr/include/sodium/randombytes.h:41
-    #SODIUM_EXPORT
-    #int randombytes_close(void);
-    sub randombytes_close(
-                          ) is native(LIB) returns int32 { * }
-
-    #-From /usr/include/sodium/randombytes.h:44
-    #SODIUM_EXPORT
-    #int randombytes_set_implementation(randombytes_implementation *impl);
-    sub randombytes_set_implementation(randombytes_implementation $impl # Typedef<randombytes_implementation>->|randombytes_implementation|*
-                                       ) is native(LIB) returns int32 { * }
-
-    #-From /usr/include/sodium/randombytes.h:47
-    #SODIUM_EXPORT
-    #const char *randombytes_implementation_name(void);
-    sub randombytes_implementation_name(
-                                        ) is native(LIB) returns Str { * }
-
-    #-From /usr/include/sodium/randombytes.h:52
-    #SODIUM_EXPORT
-    #void randombytes(unsigned char * const buf, const unsigned long long buf_len);
-    sub randombytes(CArray[uint8]                $buf # const unsigned char*
-                   ,ulonglong                     $buf_len # const long long unsigned int
-                    ) is native(LIB)  { * }
-
 
     # == /usr/include/sodium/crypto_onetimeauth.h ==
 
@@ -2826,16 +2815,6 @@ class Natrium {
                         ,Pointer[uint8]                $y # const unsigned char*
                          ) is native(LIB) returns int32 { * }
 
-    ## Externs
-
-
-    # == /usr/include/sodium/randombytes_salsa20_random.h ==
-
-    our $randombytes_salsa20_implementation = cglobal(LIB, "randombytes_salsa20_implementation", randombytes_implementation);
-
-    # == /usr/include/sodium/randombytes_sysrandom.h ==
-
-    our $randombytes_sysrandom_implementation = cglobal(LIB, "randombytes_sysrandom_implementation", randombytes_implementation);
 
 }
 
