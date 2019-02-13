@@ -1,13 +1,33 @@
-use v6.c;
+use v6;
 
-use NativeCall;
+use NativeCall :TEST, :DEFAULT;
 
 use NativeHelpers::Array;
+
+use LibraryCheck;
 
 
 class Natrium {
 
-    constant LIB = [ 'sodium', v18 ];
+    sub find-lib-version() {
+        my Str $name = 'sodium';
+        my Int $lower = 18;
+        my Int $upper = 23;
+
+        my $lib;
+
+        for $lower .. $upper -> $version-number {
+            my $version = Version.new($version-number);
+
+            if library-exists($name, $version) {
+                $lib =  guess_library_name($name, $version) ;
+                last;
+            }
+        }
+        $lib;
+    }
+
+    constant LIB =  &find-lib-version;
 
     sub sodium_init() is native(LIB) returns int32 { * }
 
