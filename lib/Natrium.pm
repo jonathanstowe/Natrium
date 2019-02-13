@@ -94,6 +94,30 @@ class Natrium {
         copy-carray-to-buf($data, $buf);
     }
 
+    sub crypto_secretbox_keybytes( --> size_t ) is native(LIB) { * }
+
+    method keybytes( --> Int ) {
+        crypto_secretbox_keybytes();
+    }
+
+    sub crypto_secretbox_noncebytes( --> size_t ) is native(LIB) { * }
+
+    method noncebytes( --> Int ) {
+        crypto_secretbox_noncebytes()
+    }
+
+    sub crypto_secretbox_macbytes() is native(LIB) returns size_t { * }
+
+    method macbytes( --> Int ) {
+        crypto_secretbox_macbytes()
+    }
+
+    #-From /usr/include/sodium/crypto_secretbox.h:30
+    ##define crypto_secretbox_PRIMITIVE "xsalsa20poly1305"
+    #SODIUM_EXPORT
+    #const char *crypto_secretbox_primitive(void);
+    sub crypto_secretbox_primitive(
+                                   ) is native(LIB) returns Str { * }
 
     #-From /usr/include/sodium/randombytes.h:38
     #SODIUM_EXPORT
@@ -167,35 +191,6 @@ class Natrium {
 
 
 
-    # == /usr/include/sodium/crypto_secretbox.h ==
-
-    #-From /usr/include/sodium/crypto_secretbox.h:18
-    ##define crypto_secretbox_KEYBYTES crypto_secretbox_xsalsa20poly1305_KEYBYTES
-    #SODIUM_EXPORT
-    #size_t  crypto_secretbox_keybytes(void);
-    sub crypto_secretbox_keybytes(
-                                  ) is native(LIB) returns size_t { * }
-
-    #-From /usr/include/sodium/crypto_secretbox.h:22
-    ##define crypto_secretbox_NONCEBYTES crypto_secretbox_xsalsa20poly1305_NONCEBYTES
-    #SODIUM_EXPORT
-    #size_t  crypto_secretbox_noncebytes(void);
-    sub crypto_secretbox_noncebytes(
-                                    ) is native(LIB) returns size_t { * }
-
-    #-From /usr/include/sodium/crypto_secretbox.h:26
-    ##define crypto_secretbox_MACBYTES crypto_secretbox_xsalsa20poly1305_MACBYTES
-    #SODIUM_EXPORT
-    #size_t  crypto_secretbox_macbytes(void);
-    sub crypto_secretbox_macbytes(
-                                  ) is native(LIB) returns size_t { * }
-
-    #-From /usr/include/sodium/crypto_secretbox.h:30
-    ##define crypto_secretbox_PRIMITIVE "xsalsa20poly1305"
-    #SODIUM_EXPORT
-    #const char *crypto_secretbox_primitive(void);
-    sub crypto_secretbox_primitive(
-                                   ) is native(LIB) returns Str { * }
 
     #-From /usr/include/sodium/crypto_secretbox.h:33
     #SODIUM_EXPORT
